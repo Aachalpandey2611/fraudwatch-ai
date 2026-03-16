@@ -1,57 +1,27 @@
 services:
-  - type: web
-    name: fraudwatch-ml
-    runtime: python
-    rootDir: fraud-warning-system/ml-service
-    buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
-    healthCheckPath: /health
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
 
   - type: web
     name: fraudwatch-backend
     runtime: node
-    rootDir: fraud-warning-system/backend
-    buildCommand: npm ci
-    startCommand: npm start
-    healthCheckPath: /api/health
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
     envVars:
-      - key: NODE_VERSION
-        value: 20.11.1
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: ML_SERVICE_URL
-        fromService:
-          type: web
-          name: fraudwatch-ml
-          property: url
-      - key: CLIENT_URLS
-        fromService:
-          type: static_site
-          name: fraudwatch-frontend
-          property: url
 
-  - type: static_site
+  - type: web
+    name: fraudwatch-ml
+    runtime: python
+    plan: free
+    buildCommand: cd ml-service && pip install -r requirements.txt
+    startCommand: cd ml-service && python app.py
+
+  - type: web
     name: fraudwatch-frontend
-    rootDir: fraud-warning-system/frontend
-    buildCommand: npm ci && npm run build
-    publishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: fraudwatch-backend
-          property: url
-      - key: VITE_SOCKET_URL
-        fromService:
-          type: web
-          name: fraudwatch-backend
-          property: url
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    runtime: node
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run preview
