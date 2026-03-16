@@ -3,7 +3,7 @@ import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Activities from "./pages/Activities";
 import Investigation from "./pages/Investigation";
-import Login from "./pages/Login";
+import Login from "./pages/Login.jsx";
 import Sidebar from "./components/Sidebar";
 
 function App() {
