@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Shield shape -->
+  <path d="M32 8 L50 15 L50 30 C50 42 40 52 32 56 C24 52 14 42 14 30 L14 15 Z" fill="url(#shield)" opacity="0.95"/>
+  <!-- Lock body -->
+  <rect x="24" y="31" width="16" height="13" rx="2.5" fill="#0f172a" opacity="0.85"/>
+  <!-- Lock shackle -->
+  <path d="M26 31 L26 27 C26 22.5 38 22.5 38 27 L38 31" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+  <!-- Keyhole -->
+  <circle cx="32" cy="36.5" r="2.2" fill="url(#bg)"/>
+  <rect x="31" y="37.5" width="2" height="3.5" rx="1" fill="url(#bg)"/>
+</svg>

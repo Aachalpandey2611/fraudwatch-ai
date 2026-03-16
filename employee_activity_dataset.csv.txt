@@ -1,0 +1,21 @@
+employee_id,employee_name,department,login_hour,data_download_mb,transactions_count,location_change,vpn_used,privilege_change,label
+E101,Rahul Sharma,Loans,9,120,15,0,0,0,normal
+E102,Amit Verma,Loans,10,95,10,0,0,0,normal
+E103,Priya Mehta,Treasury,11,80,8,0,0,0,normal
+E104,Sneha Kapoor,CustomerSupport,14,110,12,0,0,0,normal
+E105,Rohit Singh,IT,15,150,20,0,0,0,normal
+E106,Vikram Patel,Loans,2,9500,80,1,1,1,fraud
+E107,Neha Sharma,Treasury,3,8700,65,1,1,0,fraud
+E108,Karan Gupta,CustomerSupport,1,7200,50,1,1,1,fraud
+E109,Anita Desai,IT,13,200,18,0,0,0,normal
+E110,Manish Jain,Loans,16,170,14,0,0,0,normal
+E111,Raj Malhotra,Treasury,12,130,11,0,0,0,normal
+E112,Pooja Nair,CustomerSupport,8,90,9,0,0,0,normal
+E113,Aditya Rao,IT,4,8000,60,1,1,1,fraud
+E114,Kavita Iyer,Loans,9,100,12,0,0,0,normal
+E115,Arjun Das,Treasury,10,105,13,0,0,0,normal
+E116,Sahil Bansal,CustomerSupport,2,9200,75,1,1,1,fraud
+E117,Ritika Sharma,IT,14,160,19,0,0,0,normal
+E118,Deepak Yadav,Loans,3,8800,70,1,1,0,fraud
+E119,Shreya Kulkarni,Treasury,11,140,15,0,0,0,normal
+E120,Nikhil Agarwal,CustomerSupport,15,150,17,0,0,0,normal
