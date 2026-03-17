@@ -6,7 +6,7 @@ function Dashboard() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/api/activities")
+      .get(`${import.meta.env.VITE_API_URL}/api/activities`)
       .then((res) => {
         setActivities(res.data);
       })
