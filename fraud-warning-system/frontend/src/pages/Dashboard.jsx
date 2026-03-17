@@ -22,7 +22,9 @@ import api from "../services/api";
 const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL ||
   import.meta.env.VITE_API_URL ||
-  "http://localhost:4000";
+  (import.meta.env.PROD
+    ? "https://fraudwatch-backend.onrender.com"
+    : "http://localhost:4000");
 
 const EMPTY_STATS = {
   totalEmployees: 0,

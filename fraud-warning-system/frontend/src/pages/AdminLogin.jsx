@@ -19,8 +19,8 @@ export default function AdminLogin() {
     try {
       await login(form.email, form.password);
       navigate("/admin/dashboard", { replace: true });
-    } catch {
-      setError("Invalid admin credentials");
+    } catch (err) {
+      setError(err?.message || "Invalid admin credentials");
     } finally {
       setLoading(false);
     }

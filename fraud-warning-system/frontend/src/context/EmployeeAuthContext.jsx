@@ -7,7 +7,10 @@ import {
 } from "react";
 
 const EmployeeAuthContext = createContext(null);
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const DEFAULT_API_BASE = import.meta.env.PROD
+  ? "https://fraudwatch-backend.onrender.com"
+  : "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
 
 export function EmployeeAuthProvider({ children }) {
   const [employee, setEmployee] = useState(null);

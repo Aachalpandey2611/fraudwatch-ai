@@ -17,7 +17,10 @@ import {
 import toast from "react-hot-toast";
 import { useEmployeeAuth } from "../context/EmployeeAuthContext";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const DEFAULT_API_BASE = import.meta.env.PROD
+  ? "https://fraudwatch-backend.onrender.com"
+  : "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
 
 const ACTIONS = [
   {

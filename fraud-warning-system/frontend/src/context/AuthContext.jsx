@@ -7,7 +7,10 @@ import {
 } from "react";
 
 const AuthContext = createContext(null);
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const DEFAULT_API_BASE = import.meta.env.PROD
+  ? "https://fraudwatch-backend.onrender.com"
+  : "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -30,17 +33,26 @@ export function AuthProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: username, username, password }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.token && data.admin) {
-          localStorage.setItem("fw_admin_token", data.token);
-          localStorage.setItem("fw_admin_user", JSON.stringify(data.admin));
-          setUser(data.admin);
-          return data.admin;
-        }
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.token && data.admin) {
+        localStorage.setItem("fw_admin_token", data.token);
+        localStorage.setItem("fw_admin_user", JSON.stringify(data.admin));
+        setUser(data.admin);
+        return data.admin;
       }
+      if (res.status === 401) {
+        throw new Error("Invalid admin credentials");
+      }
+      if (res.status >= 500) {
+        throw new Error(
+          "Backend is unavailable. Please check Render service status.",
+        );
+      }
+      throw new Error(data?.message || "Login failed");
     } catch {}
-    throw new Error("Invalid credentials");
+    throw new Error(
+      "Unable to reach backend. Set VITE_API_URL to your Render backend URL and redeploy frontend.",
+    );
   }, []);
 
   const logout = useCallback(() => {
