@@ -49,10 +49,15 @@ export function AuthProvider({ children }) {
         );
       }
       throw new Error(data?.message || "Login failed");
-    } catch {}
-    throw new Error(
-      "Unable to reach backend. Set VITE_API_URL to your Render backend URL and redeploy frontend.",
-    );
+    } catch (error) {
+      // Preserve intentional API errors; only map true network failures.
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(
+        "Unable to reach backend. Set VITE_API_URL to your Render backend URL and redeploy frontend.",
+      );
+    }
   }, []);
 
   const logout = useCallback(() => {

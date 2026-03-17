@@ -1,24 +1,31 @@
 import axios from "axios";
 
-const DEFAULT_API_URL = import.meta.env.PROD
-  ? "https://fraudwatch-backend.onrender.com"
-  : "http://localhost:4000";
-const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+// Base URL from env (Vercel) or fallback
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? "https://fraudwatch-backend.onrender.com"
+    : "http://localhost:4000");
 
+// Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+  },
   timeout: 8000,
 });
 
-// Attach JWT from AuthContext storage key
+// Attach JWT token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("fw_admin_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
-// Handle 401 globally
+// Handle 401 errors
 api.interceptors.response.use(
   (res) => res,
   (err) => {

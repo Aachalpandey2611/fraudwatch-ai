@@ -147,6 +147,12 @@ const generateToken = ({ id, role, principalType }) => {
   return jwt.sign({ id, role, principalType }, secret, { expiresIn: "8h" });
 };
 
+const DEFAULT_ADMIN_EMAIL =
+  process.env.DEFAULT_ADMIN_EMAIL || "admin@fraudwatch.local";
+const DEFAULT_ADMIN_PASSWORD =
+  process.env.DEFAULT_ADMIN_PASSWORD || "Admin@123";
+const DEFAULT_ADMIN_NAME = process.env.DEFAULT_ADMIN_NAME || "System Admin";
+
 const findLegacyUser = async ({ usernameOrEmail, role }) => {
   if (!usernameOrEmail) return null;
   const legacy = await User.findOne({
@@ -193,6 +199,36 @@ const ensureAdminFromLegacy = async (usernameOrEmail) => {
   return admin;
 };
 
+const ensureDefaultAdmin = async (identity, password) => {
+  const normalizedIdentity = String(identity || "")
+    .trim()
+    .toLowerCase();
+  const normalizedDefaultEmail = String(DEFAULT_ADMIN_EMAIL)
+    .trim()
+    .toLowerCase();
+
+  if (!normalizedIdentity || normalizedIdentity !== normalizedDefaultEmail) {
+    return null;
+  }
+
+  if (password !== DEFAULT_ADMIN_PASSWORD) {
+    return null;
+  }
+
+  let admin = await Admin.findOne({ email: DEFAULT_ADMIN_EMAIL });
+  if (!admin) {
+    const passwordHash = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, 10);
+    admin = await Admin.create({
+      name: DEFAULT_ADMIN_NAME,
+      email: DEFAULT_ADMIN_EMAIL,
+      passwordHash,
+      role: "admin",
+    });
+  }
+
+  return admin;
+};
+
 const ensureEmployeeFromLegacy = async (usernameOrEmail) => {
   const legacy = await findLegacyUser({ usernameOrEmail, role: "employee" });
   if (!legacy) return null;
@@ -228,6 +264,9 @@ const adminLogin = async (req, res) => {
     let admin = await Admin.findOne({ $or: [{ email: identity }] });
     if (!admin) {
       admin = await ensureAdminFromLegacy(identity);
+    }
+    if (!admin) {
+      admin = await ensureDefaultAdmin(identity, password);
     }
 
     if (admin && (await admin.matchPassword(password))) {
