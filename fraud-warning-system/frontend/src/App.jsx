@@ -10,18 +10,18 @@ import {
   EmployeeAuthProvider,
   useEmployeeAuth,
 } from "./context/EmployeeAuthContext";
-import AdminLogin from "./pages/AdminLogin";
-import EmployeeLogin from "./pages/EmployeeLogin";
-import Dashboard from "./pages/Dashboard";
-import Alerts from "./pages/Alerts";
-import Activities from "./pages/Activities";
-import Investigation from "./pages/Investigation";
-import Settings from "./pages/Settings";
-import LiveDemo from "./pages/LiveDemo";
-import EmployeePortal from "./pages/EmployeePortal";
-import Sidebar from "./components/Sidebar";
-import Topbar from "./components/Topbar";
-import Chatbot from "./components/Chatbot";
+import AdminLogin from "./pages/AdminLogin.jsx";
+import EmployeeLogin from "./pages/EmployeeLogin.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Alerts from "./pages/Alerts.jsx";
+import Activities from "./pages/Activities.jsx";
+import Investigation from "./pages/Investigation.jsx";
+import Settings from "./pages/Settings.jsx";
+import LiveDemo from "./pages/LiveDemo.jsx";
+import EmployeePortal from "./pages/EmployeePortal.jsx";
+import Sidebar from "./components/Sidebar.jsx";
+import Topbar from "./components/Topbar.jsx";
+import Chatbot from "./components/Chatbot.jsx";
 
 const AdminShell = ({ children }) => (
   <div

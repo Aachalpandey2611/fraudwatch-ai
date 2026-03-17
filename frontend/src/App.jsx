@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import Alerts from "./pages/Alerts";
-import Activities from "./pages/Activities";
-import Investigation from "./pages/Investigation";
+import Dashboard from "./pages/Dashboard.jsx";
+import Alerts from "./pages/Alerts.jsx";
+import Activities from "./pages/Activities.jsx";
+import Investigation from "./pages/Investigation.jsx";
 import Login from "./pages/Login.jsx";
-import Sidebar from "./components/Sidebar";
+import Sidebar from "./components/Sidebar.jsx";
 
 function App() {
   return (
