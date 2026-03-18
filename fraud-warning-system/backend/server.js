@@ -1,21 +1,28 @@
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+
 const app = express();
 const server = http.createServer(app);
 
-// ✅ ONLY THIS CORS BLOCK
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+// ✅ CORS CONFIG (IMPORTANT)
+app.use(cors({
+  origin: "https://fraudwatch-ai-ovum.vercel.app", // your frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+// ✅ Handle preflight requests
+app.options("*", cors());
 
-  next();
-});
-
-// ✅ THEN THIS
+// ✅ Body parser
 app.use(express.json());
+
+// ✅ Routes (example)
+app.use("/api", require("./routes"));
+
+// ✅ Server start
+server.listen(5000, () => {
+  console.log("Server running on port 5000");
+});
