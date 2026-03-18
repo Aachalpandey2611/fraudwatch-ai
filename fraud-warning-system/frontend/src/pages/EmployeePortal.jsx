@@ -22,6 +22,34 @@ const DEFAULT_API_BASE = import.meta.env.PROD
   : "http://localhost:4000";
 const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
 
+const playFraudTone = () => {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "square";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.24);
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.32);
+    osc.onended = () => {
+      ctx.close().catch(() => {});
+    };
+  } catch {
+    // Ignore audio errors (autoplay and browser policy constraints).
+  }
+};
+
 const ACTIONS = [
   {
     type: "customer_lookup",
@@ -145,16 +173,31 @@ export default function EmployeePortal() {
         throw new Error(data?.message || "Failed to submit activity");
       }
       const ml = data?.mlResult;
-      setResult(ml || null);
+      const mlStatus = data?.mlStatus || "ml";
+      setResult(ml ? { ...ml, mlStatus } : null);
       const event = {
         id: `${Date.now()}-${Math.random()}`,
         actionType,
         timestamp: payload.timestamp,
         riskScore: Number(ml?.riskScore || 0),
         isAnomaly: Boolean(ml?.isAnomaly),
+        mlStatus,
       };
       setSessionEvents((prev) => [event, ...prev].slice(0, 12));
-      toast.success("Activity submitted and analyzed by ML");
+
+      if (event.isAnomaly) {
+        playFraudTone();
+        toast.error("High-risk activity detected and sent to admin dashboard");
+      } else if (mlStatus === "fallback") {
+        toast(
+          "Activity logged. ML service is unavailable, fallback scoring used.",
+          {
+            icon: "⚠️",
+          },
+        );
+      } else {
+        toast.success("Activity submitted and analyzed by ML");
+      }
     } catch (error) {
       toast.error(error.message || "Failed to submit activity");
     } finally {
@@ -571,6 +614,11 @@ export default function EmployeePortal() {
                 }}
               >
                 {result.isAnomaly ? "Anomaly Detected" : "Normal Pattern"}
+              </span>
+              <span style={{ color: "#94a3b8", fontWeight: 600 }}>
+                {result.mlStatus === "fallback"
+                  ? "Fallback Scoring"
+                  : "ML Scored"}
               </span>
             </div>
           )}

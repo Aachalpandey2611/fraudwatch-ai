@@ -25,6 +25,73 @@ const normalizeActionType = (raw) => {
   return "data_access";
 };
 
+const buildFallbackMLResult = (
+  activityData,
+  deviations = {},
+  failureMessage = "",
+) => {
+  let riskScore = 8;
+
+  const action = String(activityData.actionType || "");
+  if (action === "customer_lookup") riskScore += 3;
+  if (action === "transaction") riskScore += 8;
+  if (action === "report_generation") riskScore += 10;
+  if (action === "account_modification") riskScore += 16;
+  if (action === "bulk_download") riskScore += 26;
+  if (action === "privilege_escalation") riskScore += 34;
+
+  const accountsAccessed = Number(activityData.accountsAccessed || 0);
+  const dataVolume = Number(activityData.dataVolume || 0);
+  const txAmount = Number(activityData.transactionAmount || 0);
+  const sessionDuration = Number(activityData.sessionDuration || 0);
+
+  riskScore += Math.min(18, accountsAccessed * 0.5);
+  riskScore += Math.min(22, dataVolume / 10);
+  riskScore += Math.min(12, sessionDuration / 15);
+  if (txAmount >= 100000) riskScore += 8;
+  if (txAmount >= 500000) riskScore += 10;
+
+  const location = String(activityData.location || "").toLowerCase();
+  if (location && !location.includes("main")) {
+    riskScore += 8;
+  }
+
+  const deviationValues = Object.values(deviations)
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v));
+
+  if (deviationValues.length) {
+    const deviationScore = deviationValues.reduce((sum, value) => {
+      const normalized = Math.min(1, Math.abs(value));
+      return sum + normalized * 3;
+    }, 0);
+    riskScore += Math.min(18, deviationScore);
+  }
+
+  riskScore = clampRisk(Math.round(riskScore));
+  const isAnomaly = riskScore >= 75;
+
+  const reasons = [];
+  if (action === "privilege_escalation")
+    reasons.push("Privilege escalation attempt");
+  if (action === "bulk_download") reasons.push("Unusually large data download");
+  if (accountsAccessed >= 25) reasons.push("High number of accounts accessed");
+  if (dataVolume >= 150) reasons.push("High data volume transferred");
+  if (sessionDuration >= 180) reasons.push("Unusually long session duration");
+  if (location && !location.includes("main"))
+    reasons.push("Unusual location detected");
+  if (!reasons.length) reasons.push("Fallback baseline risk scoring applied");
+  if (failureMessage)
+    reasons.push("ML service unavailable, fallback scoring used");
+
+  return {
+    riskScore,
+    isAnomaly,
+    reasons,
+    anomalyScore: Number((riskScore / 100).toFixed(3)),
+  };
+};
+
 const inferRiskScore = (doc) => {
   if (doc.riskScore !== undefined) return clampRisk(doc.riskScore);
   const label = String(doc.label || "").toLowerCase();
@@ -221,7 +288,17 @@ const createActivity = async (req, res) => {
       },
     };
 
-    const mlResult = await mlService.analyzeActivity(mlPayload);
+    let mlResult;
+    let mlStatus = "ml";
+    let mlWarning = null;
+
+    try {
+      mlResult = await mlService.analyzeActivity(mlPayload);
+    } catch (mlError) {
+      mlStatus = "fallback";
+      mlWarning = mlError.message || "ML service unavailable";
+      mlResult = buildFallbackMLResult(activityData, deviations, mlWarning);
+    }
 
     const activity = new ActivityLog(activityData);
     activity.riskScore = mlResult.riskScore;
@@ -270,6 +347,8 @@ const createActivity = async (req, res) => {
       success: true,
       data: activity,
       mlResult,
+      mlStatus,
+      mlWarning,
       deviations,
     });
   } catch (error) {
