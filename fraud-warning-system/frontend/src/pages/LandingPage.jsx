@@ -679,7 +679,7 @@ export default function LandingPage() {
     }}
   >
     Employee Portal
-  </motion.button
+  </motion.button>
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
