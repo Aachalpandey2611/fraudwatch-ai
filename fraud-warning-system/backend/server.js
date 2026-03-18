@@ -7,7 +7,7 @@ const server = http.createServer(app);
 
 // ✅ CORS CONFIG (IMPORTANT)
 app.use(cors({
-  origin: "https://fraudwatch-ai-v8um.vercel.app/", // your frontend URL
+  origin: "https://fraudwatch-ai-v8um.vercel.app", // your frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
