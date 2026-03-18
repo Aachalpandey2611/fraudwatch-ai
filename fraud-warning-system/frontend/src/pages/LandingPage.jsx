@@ -491,7 +491,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/admin/login")}
             style={{
               padding: "9px 22px",
               borderRadius: 10,
@@ -505,10 +505,26 @@ export default function LandingPage() {
           >
             Sign In
           </button>
+           {/* ✅ ADD THIS (Employee Login) */}
+  <button
+    onClick={() => navigate("/employee/login")}
+    style={{
+      padding: "9px 22px",
+      borderRadius: 10,
+      background: "rgba(34,197,94,0.2)",
+      border: "1px solid rgba(34,197,94,0.4)",
+      color: "#22c55e",
+      fontSize: 14,
+      cursor: "pointer",
+      fontWeight: 600,
+    }}
+  >
+    Employee Login
+  </button>
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/admin/login")}
             style={{
               padding: "9px 22px",
               borderRadius: 10,
@@ -628,7 +644,7 @@ export default function LandingPage() {
               boxShadow: "0 8px 40px rgba(59,130,246,0.5)",
             }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/admin/login")}
             style={{
               padding: "14px 32px",
               borderRadius: 14,
@@ -645,6 +661,25 @@ export default function LandingPage() {
           >
             Launch Dashboard <ArrowRight size={18} />
           </motion.button>
+          
+  {/* ✅ 2️⃣ (Employee Button) */}
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.97 }}
+    onClick={() => navigate("/employee/login")}
+    style={{
+      padding: "14px 32px",
+      borderRadius: 14,
+      background: "rgba(34,197,94,0.15)",
+      border: "1px solid rgba(34,197,94,0.4)",
+      color: "#22c55e",
+      fontSize: 16,
+      fontWeight: 700,
+      cursor: "pointer",
+    }}
+  >
+    Employee Portal
+  </motion.button
           <motion.button
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
@@ -1250,7 +1285,7 @@ export default function LandingPage() {
               boxShadow: "0 12px 50px rgba(59,130,246,0.55)",
             }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/admin/login")}
             style={{
               padding: "16px 40px",
               borderRadius: 16,
