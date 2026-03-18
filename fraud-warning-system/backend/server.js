@@ -36,7 +36,10 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Routes
-app.use("/api", require("./routes"));
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/activities", require("./routes/activityRoutes"));
+app.use("/api/alerts", require("./routes/alertRoutes"));
+app.use("/api/ml", require("./routes/mlRoutes"));
 
 // ✅ Start server
 server.listen(5000, () => {
