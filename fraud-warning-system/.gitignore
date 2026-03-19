@@ -13,3 +13,4 @@ ml-service/__pycache__/
 ml-service/*.pyc
 ml-service/fraud_model.pkl
 ml-service/scaler.pkl
+ml-service/risk_calibration.json

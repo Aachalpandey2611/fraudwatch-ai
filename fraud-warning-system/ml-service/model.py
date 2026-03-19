@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -5,8 +6,18 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 import os
 
+try:
+    import sklearn
+    _SKLEARN_VERSION = sklearn.__version__
+except Exception:
+    _SKLEARN_VERSION = "unknown"
+
 MODEL_PATH = 'fraud_model.pkl'
 SCALER_PATH = 'scaler.pkl'
+CALIBRATION_PATH = 'risk_calibration.json'
+
+# Set by load_or_train() / train_model(); used by predict()
+_risk_calibration = None
 
 FEATURE_COLUMNS = [
     'hour_of_day',
@@ -151,7 +162,67 @@ def generate_training_data(n_normal=1000, n_anomaly=100):
     return X
 
 
+def _calibration_valid(cal):
+    if not cal or "s_low" not in cal or "s_high" not in cal:
+        return False
+    if cal.get("n_features") != len(FEATURE_COLUMNS):
+        return False
+    if cal.get("schema_version") != 1:
+        return False
+    try:
+        lo, hi = float(cal["s_low"]), float(cal["s_high"])
+    except (TypeError, ValueError):
+        return False
+    if hi <= lo:
+        return False
+    return True
+
+
+def _write_risk_calibration(s_low, s_high):
+    """Persist score_samples percentile bounds from training data for risk mapping."""
+    span = float(s_high) - float(s_low)
+    if span < 1e-6:
+        s_low = float(s_low) - 0.01
+        s_high = float(s_high) + 0.01
+
+    data = {
+        "schema_version": 1,
+        "n_features": len(FEATURE_COLUMNS),
+        "s_low": float(s_low),
+        "s_high": float(s_high),
+        "sklearn_version": _SKLEARN_VERSION,
+    }
+    with open(CALIBRATION_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    return data
+
+
+def _load_risk_calibration_from_disk():
+    if not os.path.exists(CALIBRATION_PATH):
+        return None
+    try:
+        with open(CALIBRATION_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _score_to_risk(score: float, cal: dict) -> int:
+    """
+    Map IsolationForest score_samples to 0-99.
+    Lower score = more anomalous = higher risk (sklearn convention).
+    """
+    s_low = float(cal["s_low"])
+    s_high = float(cal["s_high"])
+    eps = 1e-9
+    t = (float(score) - s_low) / (s_high - s_low + eps)
+    t = max(0.0, min(1.0, t))
+    risk = int(round((1.0 - t) * 99))
+    return max(0, min(99, risk))
+
+
 def train_model():
+    global _risk_calibration
     print("Generating training data...")
     X = generate_training_data(n_normal=2000, n_anomaly=200)
 
@@ -169,6 +240,15 @@ def train_model():
     )
     model.fit(X_scaled)
 
+    print("Calibrating risk score mapping from training score_samples...")
+    train_scores = model.score_samples(X_scaled)
+    s_low, s_high = np.percentile(train_scores, [2, 98])
+    _risk_calibration = _write_risk_calibration(s_low, s_high)
+    print(
+        f"Risk calibration: s_low={_risk_calibration['s_low']:.6f}, "
+        f"s_high={_risk_calibration['s_high']:.6f} -> saved {CALIBRATION_PATH}"
+    )
+
     joblib.dump(model, MODEL_PATH)
     joblib.dump(scaler, SCALER_PATH)
     print(f"Model saved to {MODEL_PATH}")
@@ -177,6 +257,8 @@ def train_model():
 
 
 def load_or_train():
+    global _risk_calibration
+
     try:
         if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
             print("Loading existing model...")
@@ -186,9 +268,16 @@ def load_or_train():
             expected = len(FEATURE_COLUMNS)
             scaler_features = getattr(scaler, "n_features_in_", expected)
 
-            if scaler_features != expected:
-                print("Model feature schema changed. Retraining model...")
+            cal = _load_risk_calibration_from_disk()
+            if scaler_features != expected or not _calibration_valid(cal):
+                if not _calibration_valid(cal):
+                    print("Risk calibration missing or invalid. Retraining model...")
+                else:
+                    print("Model feature schema changed. Retraining model...")
                 model, scaler = train_model()
+            else:
+                _risk_calibration = cal
+                print("Loaded risk calibration from disk.")
 
         else:
             print("No model found. Training new model...")
@@ -199,22 +288,28 @@ def load_or_train():
         print("🔁 Retraining new model...")
         model, scaler = train_model()
 
+    if _risk_calibration is None or not _calibration_valid(_risk_calibration):
+        print("⚠️ Calibration still invalid after load; retraining...")
+        model, scaler = train_model()
+
     return model, scaler
 
 
 def predict(activity: dict, model, scaler):
+    cal = _risk_calibration
+    if cal is None or not _calibration_valid(cal):
+        raise RuntimeError(
+            "Risk calibration is not loaded. Restart the ML service so load_or_train() can run."
+        )
+
     features = extract_features(activity)
     features_scaled = scaler.transform(features)
     prediction = model.predict(features_scaled)[0]   # 1=normal, -1=anomaly
-    score = model.score_samples(features_scaled)[0]  # more negative = more anomalous
+    score = model.score_samples(features_scaled)[0]  # lower = more anomalous
 
     is_anomaly = prediction == -1
 
-    # Map anomaly score to risk score (0-99)
-    # score range typically -0.5 to 0.1
-    normalized = (score + 0.5) / 0.6
-    normalized = max(0.0, min(1.0, normalized))
-    risk_score = int((1 - normalized) * 99)
+    risk_score = _score_to_risk(score, cal)
 
     reasons = build_reasons(activity, features[0], is_anomaly, risk_score)
 
