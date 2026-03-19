@@ -177,18 +177,28 @@ def train_model():
 
 
 def load_or_train():
-    if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
-        print("Loading existing model...")
-        model = joblib.load(MODEL_PATH)
-        scaler = joblib.load(SCALER_PATH)
-        expected = len(FEATURE_COLUMNS)
-        scaler_features = getattr(scaler, "n_features_in_", expected)
-        if scaler_features != expected:
-            print("Model feature schema changed. Retraining model...")
+    try:
+        if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
+            print("Loading existing model...")
+            model = joblib.load(MODEL_PATH)
+            scaler = joblib.load(SCALER_PATH)
+
+            expected = len(FEATURE_COLUMNS)
+            scaler_features = getattr(scaler, "n_features_in_", expected)
+
+            if scaler_features != expected:
+                print("Model feature schema changed. Retraining model...")
+                model, scaler = train_model()
+
+        else:
+            print("No model found. Training new model...")
             model, scaler = train_model()
-    else:
-        print("No model found. Training new model...")
+
+    except Exception as e:
+        print("❌ Error loading model:", e)
+        print("🔁 Retraining new model...")
         model, scaler = train_model()
+
     return model, scaler
 
 
