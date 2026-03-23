@@ -128,7 +128,7 @@ def generate_training_data(n_normal=1000, n_anomaly=100):
             np.random.uniform(0, 5),     # transaction in $10k units
             np.random.randint(1, 15),
             np.random.uniform(15, 240),
-            np.random.choice([0, 1, 2, 3]),
+            np.random.choice([0, 1, 2, 3, 4, 5]),
             np.random.randint(0, 5),
             0,
             0,
@@ -308,17 +308,11 @@ def predict(activity: dict, model, scaler):
     features_scaled = scaler.transform(features)
     prediction = model.predict(features_scaled)[0]   # 1=normal, -1=anomaly
     score = model.score_samples(features_scaled)[0]  # lower = more anomalous
+    decision_score = model.decision_function(features_scaled)[0]  # <0 anomalous
 
     is_anomaly = prediction == -1
 
     risk_score = _score_to_risk(score, cal)
-
-    # Keep risk score consistent with model classification.
-    # Normal predictions should not surface as extreme risk.
-    if not is_anomaly:
-        risk_score = min(risk_score, 49)
-    else:
-        risk_score = max(risk_score, 60)
 
     reasons = build_reasons(activity, features[0], is_anomaly, risk_score)
 
@@ -327,6 +321,7 @@ def predict(activity: dict, model, scaler):
         'isAnomaly': bool(is_anomaly),
         'reasons': reasons,
         'anomalyScore': float(score),
+        'decisionScore': float(decision_score),
     }
 
 

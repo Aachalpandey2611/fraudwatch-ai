@@ -95,7 +95,23 @@ const buildFallbackMLResult = (
 const normalizeMlResult = (rawResult) => {
   const isAnomaly = Boolean(rawResult?.isAnomaly);
   const rawRisk = clampRisk(rawResult?.riskScore);
-  const riskScore = isAnomaly ? Math.max(rawRisk, 60) : Math.min(rawRisk, 49);
+
+  const decisionScore = Number(rawResult?.decisionScore);
+  const anomalyScore = Number(rawResult?.anomalyScore);
+
+  let riskFromSignal = rawRisk;
+  if (Number.isFinite(decisionScore)) {
+    const anomalyProb = 1 / (1 + Math.exp(3 * decisionScore));
+    riskFromSignal = clampRisk(Math.round(anomalyProb * 100));
+  } else if (Number.isFinite(anomalyScore)) {
+    // score_samples tends to cluster near -0.5 in IF; lower means riskier.
+    const anomalyProb = 1 / (1 + Math.exp(12 * (anomalyScore + 0.5)));
+    riskFromSignal = clampRisk(Math.round(anomalyProb * 100));
+  }
+
+  let riskScore = clampRisk(Math.round(riskFromSignal * 0.65 + rawRisk * 0.35));
+  if (!isAnomaly) riskScore = Math.min(riskScore, 74);
+  if (isAnomaly) riskScore = Math.max(riskScore, 35);
 
   const reasons = Array.isArray(rawResult?.reasons)
     ? rawResult.reasons.filter((r) => Boolean(r))
@@ -108,15 +124,15 @@ const normalizeMlResult = (rawResult) => {
     );
   }
 
-  const anomalyScore = Number(rawResult?.anomalyScore);
+  const anomalyScoreSafe = Number(rawResult?.anomalyScore);
 
   return {
     ...rawResult,
     isAnomaly,
     riskScore,
     reasons,
-    anomalyScore: Number.isFinite(anomalyScore)
-      ? anomalyScore
+    anomalyScore: Number.isFinite(anomalyScoreSafe)
+      ? anomalyScoreSafe
       : Number((riskScore / 100).toFixed(3)),
   };
 };
