@@ -89,7 +89,7 @@ def extract_features(activity: dict) -> np.ndarray:
     login_hour_deviation = float(activity.get('loginHourDeviation', 0))
     accounts_access_deviation = float(activity.get('accountsAccessDeviation', 0))
     data_volume_deviation = float(activity.get('dataVolumeDeviation', 0))
-    transaction_deviation = float(activity.get('transactionDeviation', 0))
+    transaction_deviation = float(activity.get('transactionDeviation', 0)) / 10000
 
     features = [
         hour,
