@@ -313,6 +313,13 @@ def predict(activity: dict, model, scaler):
 
     risk_score = _score_to_risk(score, cal)
 
+    # Keep risk score consistent with model classification.
+    # Normal predictions should not surface as extreme risk.
+    if not is_anomaly:
+        risk_score = min(risk_score, 49)
+    else:
+        risk_score = max(risk_score, 60)
+
     reasons = build_reasons(activity, features[0], is_anomaly, risk_score)
 
     return {
