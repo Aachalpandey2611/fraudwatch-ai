@@ -71,8 +71,10 @@ def extract_features(activity: dict) -> np.ndarray:
     else:
         dt = datetime.datetime.now()
 
-    hour = dt.hour
-    day_of_week = dt.weekday()
+    hour = int(activity.get('clientLocalHour', dt.hour))
+    day_of_week = int(activity.get('clientDayOfWeek', dt.weekday()))
+    hour = max(0, min(23, hour))
+    day_of_week = max(0, min(6, day_of_week))
     is_weekend = 1 if day_of_week >= 5 else 0
     is_after_hours = 1 if (hour < 7 or hour > 20) else 0
 

@@ -145,6 +145,9 @@ export default function EmployeePortal() {
     setResult(null);
     try {
       const payload = {
+        clientLocalHour: new Date().getHours(),
+        clientDayOfWeek:
+          new Date().getDay() === 0 ? 6 : new Date().getDay() - 1,
         employeeId: String(employee.employeeId || employee.id),
         employeeName: employee.name,
         department: employee.department || "Customer Service",

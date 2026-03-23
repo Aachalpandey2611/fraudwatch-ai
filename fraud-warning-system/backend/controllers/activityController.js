@@ -182,6 +182,8 @@ const getAllActivities = async () => {
 const normalizeIncomingActivity = (payload, reqUser) => {
   const ts = payload.timestamp ? new Date(payload.timestamp) : new Date();
   const normalized = {
+    clientLocalHour: Number(payload.clientLocalHour),
+    clientDayOfWeek: Number(payload.clientDayOfWeek),
     userId: String(
       payload.userId || payload.employeeId || reqUser?.id || "unknown",
     ),
