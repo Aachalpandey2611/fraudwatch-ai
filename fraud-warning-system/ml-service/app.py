@@ -13,6 +13,12 @@ model, scaler = load_or_train()
 print("ML model ready!")
 
 
+# ✅ ADD THIS (FIX FOR 404 + FALLBACK ISSUE)
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'message': 'ML service is running'}), 200
+
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'OK', 'message': 'Fraud Detection ML Service Running'})
