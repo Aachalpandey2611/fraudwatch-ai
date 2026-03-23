@@ -22,6 +22,18 @@ const DEFAULT_API_BASE = import.meta.env.PROD
   : "http://localhost:4000";
 const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
 
+const normalizeMlForDisplay = (ml) => {
+  if (!ml) return null;
+  const isAnomaly = Boolean(ml.isAnomaly);
+  const rawRisk = Math.max(0, Math.min(100, Number(ml.riskScore) || 0));
+  const riskScore = isAnomaly ? Math.max(rawRisk, 60) : Math.min(rawRisk, 49);
+  return {
+    ...ml,
+    isAnomaly,
+    riskScore,
+  };
+};
+
 const playFraudTone = () => {
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -175,7 +187,7 @@ export default function EmployeePortal() {
       if (!response.ok) {
         throw new Error(data?.message || "Failed to submit activity");
       }
-      const ml = data?.mlResult;
+      const ml = normalizeMlForDisplay(data?.mlResult);
       const mlStatus = data?.mlStatus || "ml";
       setResult(ml ? { ...ml, mlStatus } : null);
       const event = {

@@ -92,6 +92,35 @@ const buildFallbackMLResult = (
   };
 };
 
+const normalizeMlResult = (rawResult) => {
+  const isAnomaly = Boolean(rawResult?.isAnomaly);
+  const rawRisk = clampRisk(rawResult?.riskScore);
+  const riskScore = isAnomaly ? Math.max(rawRisk, 60) : Math.min(rawRisk, 49);
+
+  const reasons = Array.isArray(rawResult?.reasons)
+    ? rawResult.reasons.filter((r) => Boolean(r))
+    : [];
+  if (!reasons.length) {
+    reasons.push(
+      isAnomaly
+        ? "Statistical behavioral anomaly detected by ML model"
+        : "Normal activity pattern",
+    );
+  }
+
+  const anomalyScore = Number(rawResult?.anomalyScore);
+
+  return {
+    ...rawResult,
+    isAnomaly,
+    riskScore,
+    reasons,
+    anomalyScore: Number.isFinite(anomalyScore)
+      ? anomalyScore
+      : Number((riskScore / 100).toFixed(3)),
+  };
+};
+
 const inferRiskScore = (doc) => {
   if (doc.riskScore !== undefined) return clampRisk(doc.riskScore);
   const label = String(doc.label || "").toLowerCase();
@@ -301,6 +330,8 @@ const createActivity = async (req, res) => {
       mlWarning = mlError.message || "ML service unavailable";
       mlResult = buildFallbackMLResult(activityData, deviations, mlWarning);
     }
+
+    mlResult = normalizeMlResult(mlResult);
 
     const activity = new ActivityLog(activityData);
     activity.riskScore = mlResult.riskScore;
