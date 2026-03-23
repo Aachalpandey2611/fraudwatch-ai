@@ -92,7 +92,7 @@ const buildFallbackMLResult = (
   };
 };
 
-const normalizeMlResult = (rawResult) => {
+const normalizeMlResult = (rawResult, activityData = {}, deviations = {}) => {
   const isAnomaly = Boolean(rawResult?.isAnomaly);
   const rawRisk = clampRisk(rawResult?.riskScore);
 
@@ -109,9 +109,15 @@ const normalizeMlResult = (rawResult) => {
     riskFromSignal = clampRisk(Math.round(anomalyProb * 100));
   }
 
-  let riskScore = clampRisk(Math.round(riskFromSignal * 0.65 + rawRisk * 0.35));
-  if (!isAnomaly) riskScore = Math.min(riskScore, 74);
-  if (isAnomaly) riskScore = Math.max(riskScore, 35);
+  const heuristicRisk = buildFallbackMLResult(activityData, deviations).riskScore;
+
+  let riskScore = clampRisk(
+    Math.round(riskFromSignal * 0.45 + rawRisk * 0.15 + heuristicRisk * 0.4),
+  );
+
+  // Keep classes mostly consistent while still allowing realistic score spread.
+  if (!isAnomaly) riskScore = Math.min(riskScore, 78);
+  if (isAnomaly) riskScore = Math.max(riskScore, 52);
 
   const reasons = Array.isArray(rawResult?.reasons)
     ? rawResult.reasons.filter((r) => Boolean(r))
@@ -347,7 +353,7 @@ const createActivity = async (req, res) => {
       mlResult = buildFallbackMLResult(activityData, deviations, mlWarning);
     }
 
-    mlResult = normalizeMlResult(mlResult);
+    mlResult = normalizeMlResult(mlResult, activityData, deviations);
 
     const activity = new ActivityLog(activityData);
     activity.riskScore = mlResult.riskScore;

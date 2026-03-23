@@ -25,25 +25,7 @@ const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE;
 const normalizeMlForDisplay = (ml) => {
   if (!ml) return null;
   const isAnomaly = Boolean(ml.isAnomaly);
-  const rawRisk = Math.max(0, Math.min(100, Number(ml.riskScore) || 0));
-  const decisionScore = Number(ml.decisionScore);
-  const anomalyScore = Number(ml.anomalyScore);
-
-  let riskFromSignal = rawRisk;
-  if (Number.isFinite(decisionScore)) {
-    const anomalyProb = 1 / (1 + Math.exp(3 * decisionScore));
-    riskFromSignal = Math.max(0, Math.min(100, Math.round(anomalyProb * 100)));
-  } else if (Number.isFinite(anomalyScore)) {
-    const anomalyProb = 1 / (1 + Math.exp(12 * (anomalyScore + 0.5)));
-    riskFromSignal = Math.max(0, Math.min(100, Math.round(anomalyProb * 100)));
-  }
-
-  let riskScore = Math.max(
-    0,
-    Math.min(100, Math.round(riskFromSignal * 0.65 + rawRisk * 0.35)),
-  );
-  if (!isAnomaly) riskScore = Math.min(riskScore, 74);
-  if (isAnomaly) riskScore = Math.max(riskScore, 35);
+  const riskScore = Math.max(0, Math.min(100, Number(ml.riskScore) || 0));
 
   return {
     ...ml,
