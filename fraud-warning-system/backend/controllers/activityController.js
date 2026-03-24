@@ -109,7 +109,10 @@ const normalizeMlResult = (rawResult, activityData = {}, deviations = {}) => {
     riskFromSignal = clampRisk(Math.round(anomalyProb * 100));
   }
 
-  const heuristicRisk = buildFallbackMLResult(activityData, deviations).riskScore;
+  const heuristicRisk = buildFallbackMLResult(
+    activityData,
+    deviations,
+  ).riskScore;
 
   let riskScore = clampRisk(
     Math.round(riskFromSignal * 0.45 + rawRisk * 0.15 + heuristicRisk * 0.4),

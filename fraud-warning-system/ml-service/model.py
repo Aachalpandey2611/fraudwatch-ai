@@ -312,7 +312,14 @@ def predict(activity: dict, model, scaler):
 
     is_anomaly = prediction == -1
 
-    risk_score = _score_to_risk(score, cal)
+    # ✅ FIXED CALIBRATION (BETTER SCALING)
+    s_low = cal.get("s_low", -0.7)
+    s_high = cal.get("s_high", -0.4)
+
+    normalized = (score - s_low) / (s_high - s_low)
+    normalized = max(0.0, min(1.0, normalized))
+
+    risk_score = int((1 - normalized) * 100)
 
     reasons = build_reasons(activity, features[0], is_anomaly, risk_score)
 
